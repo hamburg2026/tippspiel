@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Player {
+  id       Int     @id @default(autoincrement())
+  name     String  @unique
+  teamId   Int?
+  team     Team?   @relation(fields: [teamId], references: [id])
+  tips     Tip[]
+  isAdmin  Boolean @default(false)
+}
+
+model Team {
+  id      Int      @id @default(autoincrement())
+  name    String   @unique
+  players Player[]
+}
+
+model WcGroup {
+  id      Int         @id @default(autoincrement())
+  name    String      @unique
+  teams   WcTeam[]
+  matches Match[]
+}
+
+model WcTeam {
+  id      Int     @id @default(autoincrement())
+  name    String
+  flag    String  @default("")
+  groupId Int
+  group   WcGroup @relation(fields: [groupId], references: [id])
+}
+
+model Match {
+  id              Int      @id @default(autoincrement())
+  stage           String
+  groupId         Int?
+  group           WcGroup? @relation(fields: [groupId], references: [id])
+  homeTeam        String?
+  awayTeam        String?
+  homePlaceholder String?
+  awayPlaceholder String?
+  homeScore       Int?
+  awayScore       Int?
+  matchDate       String?
+  matchDay        Int?
+  venue           String?
+  status          String   @default("UPCOMING")
+  tips            Tip[]
+}
+
+model Tip {
+  id        Int    @id @default(autoincrement())
+  playerId  Int
+  player    Player @relation(fields: [playerId], references: [id])
+  matchId   Int
+  match     Match  @relation(fields: [matchId], references: [id])
+  homeScore Int
+  awayScore Int
+  points    Int?
+
+  @@unique([playerId, matchId])
+}
+
+model ScoringConfig {
+  id         Int @id @default(1)
+  exactScore Int @default(3)
+  exactDiff  Int @default(2)
+  tendency   Int @default(1)
+}
+
+model AppConfig {
+  key   String @id
+  value String
+}
